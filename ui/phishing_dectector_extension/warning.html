@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>피싱 경고</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 10px;
+            width: 250px;
+            background-color: #1a1a2e;
+            color: #e4e4f0;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .status {
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 5px 0;
+            margin-bottom: 5px;
+        }
+        
+        .status.safe { color: #4CAF50; }
+        .status.suspicious { color: #FFD700; }
+        .status.dangerous { color: #E53935; }
+
+        .message {
+            font-size: 0.9em;
+            line-height: 1.4;
+            color: #b0b0d0;
+        }
+    </style>
+</head>
+<body>
+    <div class="status dangerous">위험</div>
+    
+    <div class="message">
+        이 사이트는 피싱 위험이 높습니다.<br>개인 정보를 입력하지 마세요.
+    </div>
+</body>
+</html>

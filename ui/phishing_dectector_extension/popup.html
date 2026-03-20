@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>피싱 사이트 탐지기</title>
+    <script src="chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 15px;
+            width: 320px;
+            background-color: #1a1a2e;
+            color: #e4e4f0;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .header {
+            text-align: center;
+        }
+        
+        .header h2 {
+            margin: 0;
+            font-size: 1.3em;
+            color: #f0f0ff;
+        }
+
+        .status-container {
+            border-radius: 8px;
+            padding: 10px; 
+            color: white;
+            font-weight: bold;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-icon {
+            font-size: 1.5em;
+            margin-right: 8px;
+        }
+
+        .status.safe { background-color: #4CAF50; }
+        .status.suspicious { background-color: #FFD700; color: #333; }
+        .status.dangerous { background-color: #E53935; }
+
+        .section {
+            background-color: #21213e;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-title {
+            font-size: 1em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #8c8cd9;
+            margin-top: 0;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 5px;
+            font-size: 0.9em;
+        }
+
+        .info-grid span:first-child {
+            font-weight: bold;
+            color: #b0b0d0;
+        }
+
+        .radar-chart-container {
+            position: relative;
+            height: 160px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        /* AI 분석 결과 박스 스타일 */
+        .ai-insight-box {
+            background-color: rgba(140, 140, 217, 0.1);
+            border-left: 3px solid #8c8cd9;
+            padding: 8px; /* 패딩을 줄임 */
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .ai-insight-box .insight-header {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            color: #b0b0d0;
+            margin-bottom: 5px;
+        }
+
+        .ai-insight-box .insight-icon {
+            font-size: 1.2em;
+            margin-right: 5px;
+        }
+
+        .ai-insight-box .insight-text {
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        /* 게이지 차트 컨테이너 스타일 */
+        .gauge-chart-container {
+            position: relative;
+            text-align: center;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 200px;
+        }
+        
+        #gauge-value {
+            position: absolute;
+            width: 100%;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        #gauge-text {
+            position: absolute;
+            width: 100%;
+            top: 80%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .gauge-value.safe { color: #4CAF50; }
+        .gauge-value.suspicious { color: #FFD700; }
+        .gauge-value.dangerous { color: #E53935; }
+
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .report-btn {
+            background-color: #e53935;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .report-btn:hover {
+            background-color: #c62828;
+        }
+         @keyframes spin {
+            0% { transform: rotate(0deg);}
+            100% { transform: rotate(360deg);}
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(30,30,50,0.95);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div style="margin-bottom:15px;">
+            <div class="spinner" style="width:48px;height:48px;border:6px solid #8c8cd9;border-top:6px solid #e4e4f0;border-radius:50%;animation:spin 1s linear infinite;"></div>
+        </div>
+        <div style="color:#e4e4f0;font-size:1.1em;font-weight:bold;">분석 중...</div>
+    </div>
+    <div class="container">
+        <div class="header">
+            <h2>피싱사이트 탐지</h2>
+        </div>
+
+        <div class="status-container status dangerous">
+            <span class="status-icon">⚠️</span>
+            <span>위험</span>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">위험도 분석</h3>
+            <!-- 게이지 차트 영역 -->
+            <div class="gauge-chart-container">
+                <canvas id="gaugeChart" width="200" height="120" style="margin-bottom: 7px;" ></canvas>
+                <div id="gauge-value" class="gauge-value dangerous">5점</div>
+                <div id="gauge-text" class="gauge-value dangerous">위험</div>
+            </div>
+            
+            <!-- AI 설명 영역 -->
+            <div class="ai-insight-box">
+                <div class="insight-header">
+                    <span class="insight-icon">💡</span>
+                    <span>AI 분석 결과</span>
+                </div>
+                <p class="insight-text" id="ai-explanation">
+                    이 사이트는 피싱 위험도가 매우 높습니다.
+                    개인정보를 입력 받고 있습니다. 도메인의 등록일이 최근입니다.
+                    일반적으로 네이버와 같은 대형 웹사이트는 수년에서 수십 년 전에 도메인이 등록되었으며, 한국 내 서버를 사용하는 것이 일반적입니다.
+                </p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">도메인 정보</h3>
+            <div class="info-grid">
+                <span>도메인 이름</span>
+                <span>example.cowwm</span>
+                <span>등록일</span>
+                <span>2023-01-01</span>
+                <span>최근 갱신일</span>
+                <span>2024-01-01</span>
+                <span>만료일</span>
+                <span>2025-01-01</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 class="section-title">IP 정보</h3>
+            <div class="info-grid">
+                <span>IP 주소</span>
+                <span id="ip-address"></span>
+                <span>국가</span>
+                <span id="country"></span>
+                <span>AS Number</span>
+                <span id="as-number"></span>
+                <span>AS Organization</span>
+                <span id="as-org"></span>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="report-btn" id="report-btn">이 사이트 신고하기</button>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
