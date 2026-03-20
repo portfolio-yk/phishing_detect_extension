@@ -1,5 +1,5 @@
 // ==== 설정: 본인 OpenAI API 키를 넣으세요 ====
-const OPENAI_API_KEY = "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"; // 예: "sk-..."
+const OPENAI_API_KEY = "";
 
 async function getHTML(domain, { insecureTLS = false } = {}) {
   const buildURL = (d, scheme = 'https') => {
